@@ -1,22 +1,18 @@
 #include "ascii85.h"
 #include <algorithm> // For std::reverse
 
-std::string encodeBlock(const std::vector<uint8_t>& block)
-{
-    if (block.size() != 4)
-    {
+std::string encodeBlock(const std::vector<uint8_t>& block) {
+    if (block.size() != 4) {
         throw std::invalid_argument("Block size must be 4 bytes for encoding");
     }
 
     uint32_t value = (block[0] << 24) | (block[1] << 16) | (block[2] << 8) | block[3];
-    if (value == 0)
-    {
+    if (value == 0) {
         return "z";
     }
 
     std::string encoded;
-    for (int i = 4; i >= 0; --i)
-    {
+    for (int i = 4; i >= 0; --i) {
         encoded += static_cast<char>((value % 85) + '!');
         value /= 85;
     }
@@ -25,21 +21,17 @@ std::string encodeBlock(const std::vector<uint8_t>& block)
     return encoded;
 }
 
-std::vector<uint8_t> decodeASCII85Block(const std::string& block)
-{
-    if (block.length() != 5)
-    {
+std::vector<uint8_t> decodeASCII85Block(const std::string& block) {
+    if (block.length() != 5) {
         throw std::invalid_argument("Block size must be 5 characters for decoding");
     }
 
-    if (block == "z")
-    {
+    if (block == "z") {
         return {0, 0, 0, 0};
     }
 
     uint32_t value = 0;
-    for (char c : block)
-    {
+    for (char c : block) {
         value = value * 85 + decodeChar(c);
     }
 
@@ -51,10 +43,8 @@ std::vector<uint8_t> decodeASCII85Block(const std::string& block)
     return decoded;
 }
 
-uint8_t decodeChar(char c)
-{
-    if (c < '!' || c > 'u')
-    {
+uint8_t decodeChar(char c) {
+    if (c < '!' || c > 'u') {
         throw std::invalid_argument("Invalid ASCII85 symbol");
     }
 
