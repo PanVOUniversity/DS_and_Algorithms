@@ -54,6 +54,8 @@ def test_decoding():
         assert return_code == 0, f"Decoder failed with return code {return_code}"
         
         # Compare results
+        print(f"Python decoded ({len(py_decoded)}): {repr(py_decoded)}")
+        print(f"C++ decoded    ({len(cpp_decoded)}): {repr(cpp_decoded)}")
         assert py_decoded == cpp_decoded, \
             f"Decoding mismatch for input {encoded_data}\nPython: {py_decoded}\nC++:    {cpp_decoded}"
 
