@@ -31,6 +31,10 @@ int main(int argc, char* argv[]) {
         std::string output;
 
         if (decodeMode) {
+            size_t decoded_expected_length = (input.length() / 5) * 4;
+            if (input.length() % 5 != 0) {
+                decoded_expected_length -= (5 - (input.length() % 5));
+            }
             for (size_t i = 0; i < input.length(); i += 5) {
                 std::string block = input.substr(i, 5);
                 if (block.length() < 5) {
@@ -38,6 +42,10 @@ int main(int argc, char* argv[]) {
                 }
                 std::vector<uint8_t> decoded = decodeASCII85Block(block);
                 output.append(decoded.begin(), decoded.end());
+            }
+            // Trim any padding bytes from the last block
+            if (output.length() > decoded_expected_length) {
+                output.resize(decoded_expected_length);
             }
         } else {
             size_t inputLength = input.length();
