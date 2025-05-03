@@ -20,7 +20,6 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y g++ python3 python3-pip libgtest-dev cmake
-        sudo pip3 install -r <(echo "base64")
         cd /usr/src/googletest
         sudo cmake .
         sudo make
