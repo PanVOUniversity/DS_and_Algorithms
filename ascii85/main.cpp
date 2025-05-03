@@ -31,9 +31,14 @@ int main(int argc, char* argv[]) {
         std::string output;
 
         if (decodeMode) {
-            size_t decoded_expected_length = (input.length() / 5) * 4;
-            if (input.length() % 5 != 0) {
-                decoded_expected_length -= (5 - (input.length() % 5));
+            if (input.length() % 5 == 1) {
+                throw std::runtime_error("Invalid ASCII85 input: length mod 5 == 1");
+            }
+            size_t num_blocks = input.length() / 5;
+            size_t last_block_len = input.length() % 5;
+            size_t decoded_expected_length = num_blocks * 4;
+            if (last_block_len != 0) {
+                decoded_expected_length += last_block_len - 1;
             }
             for (size_t i = 0; i < input.length(); i += 5) {
                 std::string block = input.substr(i, 5);
@@ -41,11 +46,10 @@ int main(int argc, char* argv[]) {
                     block.append(5 - block.length(), 'u');
                 }
                 std::vector<uint8_t> decoded = decodeASCII85Block(block);
+                if (i + 5 >= input.length() && last_block_len != 0) {
+                    decoded.resize(last_block_len - 1);
+                }
                 output.append(decoded.begin(), decoded.end());
-            }
-            // Trim any padding bytes from the last block
-            if (output.length() > decoded_expected_length) {
-                output.resize(decoded_expected_length);
             }
         } else {
             size_t inputLength = input.length();
