@@ -1,0 +1,36 @@
+name: C++ CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y g++ python3 python3-pip libgtest-dev cmake
+        sudo pip3 install -r <(echo "base64")
+        cd /usr/src/googletest
+        sudo cmake .
+        sudo make
+        sudo cp -v lib/*.a /usr/lib/
+
+    - name: Make build script executable
+      run: chmod +x ascii85/build.sh
+
+    - name: Make test script executable
+      run: chmod +x ascii85/test.sh
+
+    - name: Run build and tests
+      run: ./ascii85/test.sh 
