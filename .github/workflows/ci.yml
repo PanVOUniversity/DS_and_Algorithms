@@ -19,7 +19,6 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        
         cd /usr/src/googletest
         sudo cmake .
         sudo make
