@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <iomanip>
 #include "ascii85.h"
+#include <algorithm> // For std::min
 
 int main(int argc, char* argv[]) {
     bool decodeMode = false;
@@ -34,44 +35,61 @@ int main(int argc, char* argv[]) {
         std::string output;
 
         if (decodeMode) {
-            // --- Added check for invalid input lengths ---
-            // ASCII85 encoded data (without 'z') should have a length that is a multiple of 5,
-            // or 1 more than a multiple of 5 (for the last partial block).
-            // This check specifically targets lengths that don't fit this pattern and are not empty.
-            // The case where length % 5 == 1 is handled by the existing throw statement.
-            if (input.length() > 0 && input.length() % 5 != 0 && input.length() % 5 != 1) {
-                 std::cerr << "Error: Invalid ASCII85 input length." << std::endl;
-                 return 1; // Indicate an error as per requirements
-            }
-            // --- End of added check ---
-
-            // Existing check for length % 5 == 1
+            // Check for invalid length % 5 == 1 at the beginning
             if (input.length() % 5 == 1) {
-                throw std::runtime_error("Invalid ASCII85 input: length mod 5 == 1");
+                std::cerr << "Error: Invalid ASCII85 input: length mod 5 == 1" << std::endl;
+                return 1; // Indicate an error
             }
 
-            size_t num_blocks = input.length() / 5;
-            size_t last_block_len = input.length() % 5;
-            // Calculate expected decoded length, accounting for partial last block
-            size_t decoded_expected_length = num_blocks * 4;
-            if (last_block_len != 0) {
-                decoded_expected_length += last_block_len - 1;
-            }
+            size_t current_pos = 0;
+            while (current_pos < input.length()) {
+                size_t remaining_len = input.length() - current_pos;
+                // Determine the size of the current block (5 for full blocks, remaining_len for the last block)
+                size_t block_size = std::min((size_t)5, remaining_len);
 
-            // Process input in blocks of 5 characters
-            for (size_t i = 0; i < input.length(); i += 5) {
-                std::string block = input.substr(i, 5);
-                // Pad the last block with 'u' if it's shorter than 5 (shouldn't happen with valid input except the very end)
-                if (block.length() < 5) {
-                    block.append(5 - block.length(), 'u');
-                }
-                std::vector<uint8_t> decoded = decodeASCII85Block(block);
+                std::string block = input.substr(current_pos, block_size);
 
-                // Resize the last decoded block to remove padding bytes if necessary
-                if (i + 5 >= input.length() && last_block_len != 0) {
-                    decoded.resize(last_block_len - 1);
+                std::vector<uint8_t> decoded_block;
+
+                if (block == "z") {
+                    // The 'z' shortcut can only appear as a single character representing 4 null bytes
+                    if (block_size != 1) {
+                         std::cerr << "Error: Invalid ASCII85 input: 'z' in a block of size " << block_size << std::endl;
+                         return 1; // Indicate an error
+                    }
+                    decoded_block = {0, 0, 0, 0};
+                } else {
+                    // For the last partial block (size 2 to 4), pad with 'u' to make it 5 characters for decodeASCII85Block
+                    // decodeASCII85Block expects 5 characters.
+                    if (block_size < 5) {
+                        // Invalid input: a partial block must be at least 2 characters
+                        if (block_size < 2) {
+                             std::cerr << "Error: Invalid ASCII85 input: partial block too short." << std::endl;
+                             return 1; // Indicate an error
+                        }
+                        block.append(5 - block_size, 'u');
+                    }
+
+                    try {
+                        decoded_block = decodeASCII85Block(block);
+                    } catch (const std::invalid_argument& e) {
+                        // Catch invalid characters within the block as thrown by decodeChar or decodeASCII85Block
+                        std::cerr << "Error during block decoding: " << e.what() << std::endl;
+                        return 1; // Indicate an error
+                    }
+
+                    // If it was a partial block, resize the decoded output to the correct number of bytes
+                    // A block of size k (2 <= k <= 4) decodes to k-1 bytes of original data.
+                    if (block_size < 5) {
+                        decoded_block.resize(block_size - 1);
+                    }
+                     // If it was a full block (size 5), it decodes to 4 bytes, no resize needed here.
                 }
-                output.append(decoded.begin(), decoded.end());
+
+                // Append the decoded bytes to the output
+                output.append(decoded_block.begin(), decoded_block.end());
+                // Move the current position forward by the size of the block just processed
+                current_pos += block_size;
             }
         } else { // Encoding mode
             size_t inputLength = input.length();
@@ -89,6 +107,7 @@ int main(int argc, char* argv[]) {
             }
 
             // Remove the characters corresponding to padding from the end of the encoded output
+            // The number of characters to remove is equal to the number of padding bytes added.
             if (padding > 0) {
                 output.erase(output.length() - padding, padding);
             }
