@@ -1,5 +1,5 @@
 .vscode/ 
-Gaus_solving/solver
-Gaus_solving/generate_system
-Gaus_solving/test_solver
+./Gaus_solving/solver
+./Gaus_solving/generate_system
+./Gaus_solving/test_solver
 *.o 
