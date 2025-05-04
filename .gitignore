@@ -1,1 +1,5 @@
 .vscode/ 
+solver
+generate_system
+test_solver
+*.o 
