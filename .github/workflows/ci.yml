@@ -20,7 +20,6 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y g++ python3 python3-pip libgtest-dev cmake
-        sudo pip3 install base64 # Install base64 for your Python tests
         # Build and install GoogleTest (gtest) - necessary for g++ linking
         # This step is kept as your test.sh links against these libraries.
         cd /usr/src/googletest
