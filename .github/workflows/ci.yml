@@ -1,0 +1,45 @@
+name: C++ CI
+
+on:
+  push:
+    branches:
+      - main # or the name of your default branch
+  pull_request:
+    branches:
+      - main # or the name of your default branch
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest # Use a Linux environment
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y g++ python3 python3-pip libgtest-dev cmake
+        # Build and install GoogleTest (gtest) - necessary for g++ linking
+        # This step is kept as your test.sh links against these libraries.
+        cd /usr/src/googletest
+        sudo cmake .
+        sudo make
+        sudo cp -v lib/*.a /usr/lib/
+
+    - name: Verify main.cpp content before build
+      run: |
+        echo "Content of ascii85/main.cpp:"
+        cat ascii85/main.cpp
+        echo "--- End of main.cpp content ---"
+
+    - name: Make build script executable
+      run: chmod +x ascii85/build.sh
+
+    - name: Make test script executable
+      run: chmod +x ascii85/test.sh
+
+    - name: Run build and tests
+      run: |
+        cd ascii85
+        ./test.sh

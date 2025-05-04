@@ -7,16 +7,11 @@ std::string encodeBlock(const std::vector<uint8_t>& block) {
     }
 
     uint32_t value = (block[0] << 24) | (block[1] << 16) | (block[2] << 8) | block[3];
-    if (value == 0) {
-        return "z";
-    }
-
     std::string encoded;
     for (int i = 4; i >= 0; --i) {
         encoded += static_cast<char>((value % 85) + '!');
         value /= 85;
     }
-
     std::reverse(encoded.begin(), encoded.end());
     return encoded;
 }
