@@ -3,6 +3,23 @@
 bool decodeFile(const std::string& compressedFile, const std::string& dictionaryFile, const std::string& decodedFile) {
     std::map<std::string, unsigned char> decodingMap;
     if (!readDictionary(dictionaryFile, decodingMap)) {
+        std::ifstream compressedCheckFile(compressedFile, std::ios::binary | std::ios::ate);
+        if (compressedCheckFile.is_open() && compressedCheckFile.tellg() == sizeof(int)) {
+            compressedCheckFile.seekg(0);
+            int paddingBits;
+            compressedCheckFile.read(reinterpret_cast<char*>(&paddingBits), sizeof(paddingBits));
+            if (paddingBits == 0) {
+                std::ofstream emptyDecodedFile(decodedFile, std::ios::binary);
+                if (!emptyDecodedFile.is_open()) {
+                    std::cerr << "Oopsie: Couldn't create empty decoded file: " << decodedFile << std::endl;
+                    return false;
+                }
+                emptyDecodedFile.close();
+                std::cout << "Heads up: Compressed file was empty. Created empty decoded file." << std::endl;
+                return true;
+            }
+        }
+        std::cerr << "Oopsie: Dictionary read failed and compressed file is not empty." << std::endl;
         return false;
     }
 
@@ -21,6 +38,13 @@ bool decodeFile(const std::string& compressedFile, const std::string& dictionary
 
     int paddingBits = 0;
     inFile.read(reinterpret_cast<char*>(&paddingBits), sizeof(paddingBits));
+
+    if (inFile.peek() == EOF && inFile.gcount() == 0) {
+        std::cout << "Heads up: Compressed file contained only padding info. Decoded file is empty." << std::endl;
+        inFile.close();
+        outFile.close();
+        return true;
+    }
 
     std::string currentCode = "";
     unsigned char byte;

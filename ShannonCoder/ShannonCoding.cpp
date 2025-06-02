@@ -1,6 +1,11 @@
 #include "ShannonCoding.h"
 
 void generateCodes(std::vector<CodeInfo>& codes, int start, int end, const std::string& currentPrefix) {
+    if (codes.size() == 1) {
+        codes[0].code = "0";
+        return;
+    }
+
     if (start == end) {
         codes[start].code = currentPrefix;
         return;
@@ -25,10 +30,10 @@ void generateCodes(std::vector<CodeInfo>& codes, int start, int end, const std::
         }
     }
 
-    if (splitPoint == end && start != end) {
-        splitPoint = end - 1;
-    }
     if (splitPoint == start && start != end) {
+        splitPoint = start;
+    } else if (splitPoint == end && start != end) {
+        splitPoint = end - 1;
     }
 
 

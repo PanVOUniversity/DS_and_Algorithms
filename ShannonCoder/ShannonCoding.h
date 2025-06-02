@@ -24,5 +24,4 @@ bool writeDictionary(const std::string& filename, const std::map<unsigned char, 
 
 bool readDictionary(const std::string& filename, std::map<std::string, unsigned char>& decodingMap);
 
-#endif // SHANNON_CODING_H
-
+#endif
