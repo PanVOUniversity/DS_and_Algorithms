@@ -12,6 +12,6 @@ echo "Running unit tests..."
 
 # Run random data tests using Python
 echo "Running random data tests..."
-python3 test_random.py
+python3 tests.py
 
 echo "All tests passed!"
